@@ -33,7 +33,7 @@ A dark-themed React application for viewing GitHub pull requests that are awaiti
 1. Clone or download this repository
 2. Install dependencies:
    ```bash
-   npm install
+   yarn
    ```
 
 3. Create a `.env` file in the root directory:
@@ -49,7 +49,7 @@ A dark-themed React application for viewing GitHub pull requests that are awaiti
 
 5. Start the development server:
    ```bash
-   npm run dev
+   yarn dev
    ```
 
 6. Open your browser to the URL shown in the terminal (typically `http://localhost:5173`)
@@ -112,33 +112,11 @@ The app automatically handles pagination to fetch all available results.
 
 ### Available Scripts
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint
-
-### Project Structure
-
-```
-src/
-├── components/          # React components
-│   ├── PullRequestList.tsx
-│   ├── PullRequestList.css
-│   ├── PullRequestRow.tsx
-│   └── PullRequestRow.css
-├── config/             # Configuration files
-│   └── constants.ts
-├── hooks/              # Custom React hooks
-│   └── usePullRequests.ts
-├── services/           # API services
-│   └── github.ts
-├── types/              # TypeScript type definitions
-│   └── github.ts
-├── App.tsx
-├── App.css
-├── index.css
-└── main.tsx
-```
+- `yarn run dev` - Start development server
+- `yarn run build` - Build for production
+- `yarn run preview` - Preview production build
+- `yarn run lint` - Run ESLint
+- `yarn run type-check` - Find TypeScript errors
 
 ## Troubleshooting
 

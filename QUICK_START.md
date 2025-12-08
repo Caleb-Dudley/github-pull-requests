@@ -11,7 +11,7 @@ VITE_GITHUB_USERNAME=Caleb-Dudley
 ## 2. Start the App
 
 ```bash
-npm run dev
+yarn dev
 ```
 
 Then open: http://localhost:5173
@@ -75,4 +75,4 @@ export const EXCLUDED_AUTHORS = [
 
 **Need to change something?**
 - Edit `.env` or `src/config/constants.ts`
-- Restart dev server: `Ctrl+C` then `npm run dev`
+- Restart dev server: `Ctrl+C` then `yarn dev`
