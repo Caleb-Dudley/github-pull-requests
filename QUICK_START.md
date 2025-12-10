@@ -4,8 +4,8 @@
 
 Edit the `.env` file:
 ```env
-VITE_GITHUB_TOKEN=your_github_personal_access_token_here
-VITE_GITHUB_USERNAME=Caleb-Dudley
+VITE_GITHUB_TOKEN=your_github_token_with_sso_authorization_here
+VITE_GITHUB_USERNAME=your_github_username
 ```
 
 ## 2. Start the App

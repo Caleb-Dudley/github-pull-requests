@@ -43,7 +43,7 @@ A dark-themed React application for viewing GitHub pull requests that are awaiti
 
 4. Edit `.env` and add your credentials:
    ```env
-   VITE_GITHUB_TOKEN=your_personal_access_token_here
+   VITE_GITHUB_TOKEN=your_github_token_with_sso_authorization_here
    VITE_GITHUB_USERNAME=your_github_username
    ```
 
