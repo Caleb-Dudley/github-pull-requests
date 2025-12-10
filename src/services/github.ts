@@ -1,5 +1,5 @@
 import { EXCLUDED_AUTHORS, GITHUB_API_BASE_URL, PER_PAGE } from '../config/constants';
-import type { SearchResponse, GitHubRepository, PullRequestWithRepo } from '../types/github';
+import type { SearchResponse, GitHubRepository, PullRequestWithRepo, AuthorFilter } from '../types/github';
 
 /**
  * Service for interacting with the GitHub API
@@ -24,9 +24,26 @@ class GitHubService {
   /**
    * Build the search query with all filters
    */
-  private buildSearchQuery(): string {
-    const excludeAuthors = EXCLUDED_AUTHORS.map(author => `-author:${author}`).join(' ');
-    return `is:open is:pr review-requested:${this.username} archived:false ${excludeAuthors}`.trim();
+  private buildSearchQuery(authorFilters?: AuthorFilter[], sinceDate?: string, sinceEnabled?: boolean): string {
+    // Use provided filters or fall back to default excluded authors
+    const filters = authorFilters || EXCLUDED_AUTHORS.map(username => ({ username, mode: 'exclude' as const }));
+    
+    const excludedAuthors = filters
+      .filter(f => f.mode === 'exclude')
+      .map(f => `-author:${f.username}`)
+      .join(' ');
+    
+    const includedAuthors = filters
+      .filter(f => f.mode === 'include')
+      .map(f => `author:${f.username}`)
+      .join(' ');
+    
+    const authorQuery = [excludedAuthors, includedAuthors].filter(Boolean).join(' ');
+    
+    // Add since date if enabled and valid
+    const sinceQuery = (sinceEnabled && sinceDate) ? `created:>=${sinceDate}` : '';
+    
+    return `is:open is:pr review-requested:${this.username} archived:false ${authorQuery} ${sinceQuery}`.trim();
   }
 
   /**
@@ -52,9 +69,16 @@ class GitHubService {
   /**
    * Fetch a single page of pull requests
    */
-  private async fetchPage(page: number): Promise<SearchResponse> {
-    const query = encodeURIComponent(this.buildSearchQuery());
-    const url = `${GITHUB_API_BASE_URL}/search/issues?q=${query}&per_page=${PER_PAGE}&page=${page}`;
+  private async fetchPage(
+    page: number, 
+    authorFilters?: AuthorFilter[], 
+    sort: 'created' | 'updated' | 'comments' = 'created',
+    direction: 'asc' | 'desc' = 'desc',
+    sinceDate?: string,
+    sinceEnabled?: boolean
+  ): Promise<SearchResponse> {
+    const query = encodeURIComponent(this.buildSearchQuery(authorFilters, sinceDate, sinceEnabled));
+    const url = `${GITHUB_API_BASE_URL}/search/issues?q=${query}&sort=${sort}&order=${direction}&per_page=${PER_PAGE}&page=${page}`;
     return this.fetchFromGitHub<SearchResponse>(url);
   }
 
@@ -82,13 +106,19 @@ class GitHubService {
   /**
    * Fetch all pull requests with pagination
    */
-  async fetchAllPullRequests(): Promise<PullRequestWithRepo[]> {
+  async fetchAllPullRequests(
+    authorFilters?: AuthorFilter[],
+    sort: 'created' | 'updated' | 'comments' = 'created',
+    direction: 'asc' | 'desc' = 'desc',
+    sinceDate?: string,
+    sinceEnabled?: boolean
+  ): Promise<PullRequestWithRepo[]> {
     const allPRs: PullRequestWithRepo[] = [];
     let page = 1;
     let hasMore = true;
 
     while (hasMore) {
-      const data = await this.fetchPage(page);
+      const data = await this.fetchPage(page, authorFilters, sort, direction, sinceDate, sinceEnabled);
       
       if (data.items.length === 0) {
         hasMore = false;
@@ -118,10 +148,13 @@ class GitHubService {
   /**
    * Get the current configuration
    */
-  getConfig() {
+  getConfig(authorFilters?: AuthorFilter[]) {
+    const filters = authorFilters || EXCLUDED_AUTHORS.map(username => ({ username, mode: 'exclude' as const }));
     return {
       username: this.username,
-      excludedAuthors: EXCLUDED_AUTHORS,
+      excludedAuthors: filters.filter(f => f.mode === 'exclude').map(f => f.username),
+      includedAuthors: filters.filter(f => f.mode === 'include').map(f => f.username),
+      authorFilters: filters,
       hasToken: !!this.token && this.token !== 'GITHUB_PAT_WITH_REPO_SCOPE'
     };
   }

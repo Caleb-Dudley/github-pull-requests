@@ -7,7 +7,7 @@ A dark-themed React application for viewing GitHub pull requests that are awaiti
 - 🔍 **Smart Filtering**: Automatically fetches PRs where you've been requested as a reviewer
 - 🚫 **Author Exclusion**: Exclude PRs from specific authors (e.g., bots like Dependabot)
 - 🌙 **Dark Theme**: GitHub-inspired dark theme for comfortable viewing
-- 🔄 **Auto-refresh**: Automatically refreshes PR list every 5 minutes
+- 🔄 **Auto-refresh**: Automatically refreshes PR list every 5 minutes by default
 - 📊 **Comprehensive Information**: View repository, title, author, comments, dates, labels, and status
 - 🖱️ **Quick Access**: Click any row to open the PR in a new tab
 - 📄 **No Pagination Needed**: Automatically fetches all pages of results
@@ -69,14 +69,6 @@ export const EXCLUDED_AUTHORS = [
 ```
 
 Add or remove usernames as needed. The format `app/username` is used for GitHub bot accounts.
-
-### Auto-refresh Interval
-
-The default refresh interval is 5 minutes. You can change this in `src/config/constants.ts`:
-
-```typescript
-export const REFRESH_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes in milliseconds
-```
 
 ## How It Works
 

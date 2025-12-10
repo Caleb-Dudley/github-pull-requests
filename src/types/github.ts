@@ -53,3 +53,11 @@ export interface SearchResponse {
 export interface PullRequestWithRepo extends GitHubPullRequest {
   repository: GitHubRepository;
 }
+
+/**
+ * Author filter configuration
+ */
+export interface AuthorFilter {
+  username: string;
+  mode: 'include' | 'exclude';
+}
