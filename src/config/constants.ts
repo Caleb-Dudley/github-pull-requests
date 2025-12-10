@@ -14,11 +14,6 @@ export const EXCLUDED_AUTHORS = [
 ];
 
 /**
- * Auto-refresh interval in milliseconds (5 minutes)
- */
-export const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
-
-/**
  * GitHub API configuration
  */
 export const GITHUB_API_BASE_URL = 'https://api.github.com';

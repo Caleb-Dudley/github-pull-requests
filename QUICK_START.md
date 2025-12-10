@@ -46,7 +46,7 @@ export const EXCLUDED_AUTHORS = [
 ## 📋 What You Get
 
 ✅ All PRs where you're requested as reviewer  
-✅ Auto-refreshes every 5 minutes  
+✅ Auto-refreshes every 5 minutes by default
 ✅ Click any row to open in new tab  
 ✅ Excludes bot PRs automatically  
 ✅ Shows: repo, title, author, comments, dates, labels, status  
@@ -59,7 +59,7 @@ export const EXCLUDED_AUTHORS = [
 | File | Purpose |
 |------|---------|
 | `.env` | Your GitHub token & username |
-| `src/config/constants.ts` | Excluded authors & refresh interval |
+| `src/config/constants.ts` | Excluded authors |
 
 ---
 

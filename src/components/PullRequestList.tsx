@@ -1,9 +1,12 @@
 /** @jsxImportSource @emotion/react */
 import { css } from '@emotion/react';
+import { useState } from 'react';
 import { usePullRequests } from '../hooks/usePullRequests';
 import { PullRequestRow } from './PullRequestRow';
+import { AuthorFilterManager } from './AuthorFilterManager';
 import { githubService } from '../services/github';
-import { REFRESH_INTERVAL_MS } from '../config/constants';
+import { useAppContext } from '../AppContext';
+import type { AuthorFilter } from '../types/github';
 import '../assets/PullRequestList.css';
 
 const configListStyle = css`
@@ -27,9 +30,104 @@ const footerNoteStyle = css`
   margin-top: 0.5rem;
 `;
 
+const infoBarInnerStyle = css`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+`;
+
+const infoBarLeftStyle = css`
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+`;
+
+const authorFilterButtonStyle = css`
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+  color: #c9d1d9;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #30363d;
+  }
+`;
+
+const refreshDropdownStyle = {
+  backgroundColor: '#0d1117',
+  border: '1px solid #30363d',
+  borderRadius: '4px',
+  padding: '0.25rem 0.5rem',
+  color: '#c9d1d9',
+  fontSize: '0.9rem',
+  cursor: 'pointer'
+};
+
+const sortButtonStyle = css`
+  background: #21262d;
+  border: 1px solid #30363d;
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  color: #c9d1d9;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-left: 0.25rem;
+  transition: background 0.2s;
+  
+  &:hover {
+    background: #30363d;
+  }
+`;
+
+const sinceContainerStyle = css`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const dateInputStyle = {
+  backgroundColor: '#0d1117',
+  border: '1px solid #30363d',
+  borderRadius: '4px',
+  padding: '0.25rem 0.5rem',
+  color: '#c9d1d9',
+  fontSize: '0.9rem',
+  cursor: 'pointer'
+};
+
 export function PullRequestList() {
+  const { 
+    refreshIntervalMins, 
+    setRefreshIntervalMins, 
+    authorFilters, 
+    setAuthorFilters,
+    sortBy,
+    setSortBy,
+    sortDirection,
+    setSortDirection,
+    sinceEnabled,
+    setSinceEnabled,
+    sinceDate,
+    setSinceDate
+  } = useAppContext();
   const { pullRequests, loading, error, lastUpdated, refetch } = usePullRequests();
-  const config = githubService.getConfig();
+  const [showFilterManager, setShowFilterManager] = useState(false);
+  const config = githubService.getConfig(authorFilters);
+
+  const handleSaveFilters = (filters: AuthorFilter[]) => {
+    setAuthorFilters?.(filters);
+    setShowFilterManager(false);
+    // Trigger refetch with new filters
+    refetch();
+  };
+
+  const excludedCount = authorFilters.filter(f => f.mode === 'exclude').length;
+  const includedCount = authorFilters.filter(f => f.mode === 'include').length;
 
   if (!config.hasToken) {
     return (
@@ -71,7 +169,81 @@ export function PullRequestList() {
     );
   }
 
-  const refreshMinutes = REFRESH_INTERVAL_MS / 1000 / 60;
+  const RefreshTimeDropdown = (
+    <select
+      value={refreshIntervalMins}
+      onChange={(e) => {
+        const minutes = Number(e.target.value);
+        setRefreshIntervalMins?.(minutes);
+        refetch();
+      }}
+      style={refreshDropdownStyle}
+    >
+      {[1, 2, 5, 10, 15, 30, 60, 90, 120].map((min) => (
+        <option key={min} value={min}>
+          {min} minute{min !== 1 ? 's' : ''}
+        </option>
+      ))}
+    </select>
+  );
+
+  const SortDropdown = (
+    <select
+      value={sortBy}
+      onChange={(e) => {
+        setSortBy?.(e.target.value as 'created' | 'updated' | 'comments');
+        refetch();
+      }}
+      style={refreshDropdownStyle}
+    >
+      <option value="created">Created</option>
+      <option value="updated">Updated</option>
+      <option value="comments">Comments</option>
+    </select>
+  );
+
+  const SortDirectionButton = (
+    <button
+      css={sortButtonStyle}
+      onClick={() => {
+        setSortDirection?.(sortDirection === 'desc' ? 'asc' : 'desc');
+        refetch();
+      }}
+      title={sortDirection === 'desc' ? 'Descending' : 'Ascending'}
+    >
+      {sortDirection === 'desc' ? '↓' : '↑'}
+    </button>
+  );
+
+  const SinceFilter = (
+    <div css={sinceContainerStyle}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={sinceEnabled}
+          onChange={(e) => {
+            setSinceEnabled?.(e.target.checked);
+            refetch();
+          }}
+          style={{ cursor: 'pointer' }}
+        />
+        Since:
+      </label>
+      {sinceEnabled ? (
+        <input
+          type="date"
+          value={sinceDate}
+          onChange={(e) => {
+            setSinceDate?.(e.target.value);
+            refetch();
+          }}
+          style={dateInputStyle}
+        />
+      ) : (
+        <span style={{ fontStyle: 'italic' }}>All time</span>
+      )}
+    </div>
+  );
 
   return (
     <div className="container">
@@ -90,18 +262,58 @@ export function PullRequestList() {
       </header>
 
       <div className="info-bar">
-        <div className="info-item">
-          <strong>{pullRequests.length}</strong> pull request{pullRequests.length !== 1 ? 's' : ''}
-        </div>
-        {lastUpdated && (
-          <div className="info-item">
-            Last updated: {lastUpdated.toLocaleTimeString()}
+        <div css={infoBarInnerStyle}>
+          <div css={infoBarLeftStyle}>
+            <div className="info-item">
+              <strong>{pullRequests.length}</strong> pull request{pullRequests.length !== 1 ? 's' : ''}
+            </div>
+            {lastUpdated && (
+              <div className="info-item">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </div>
+            )}
+            <div className="info-item">
+              {`Auto-refresh:`} {RefreshTimeDropdown}
+            </div>
+            <div className="info-item">
+              {`Sort:`} {SortDropdown}
+              {SortDirectionButton}
+            </div>
+            <div className="info-item">
+              {SinceFilter}
+            </div>
           </div>
-        )}
-        <div className="info-item">
-          Auto-refresh: every {refreshMinutes} minutes
+          <div>
+            <button 
+              css={authorFilterButtonStyle}
+              onClick={() => setShowFilterManager(true)}
+            >
+              {excludedCount > 0 && (
+                <>
+                Excluding {excludedCount} author{excludedCount !== 1 ? 's' : ''}
+                {includedCount > 0 && ', '}
+                </>
+              )}
+              {includedCount > 0 && (
+                <>
+                Including {includedCount} author{includedCount !== 1 ? 's' : ''}
+                </>
+              )}
+              {excludedCount === 0 && includedCount === 0 && 
+                'No author filters'
+              }
+            </button>
+          </div>
         </div>
       </div>
+
+      {showFilterManager && (
+        <AuthorFilterManager
+          filters={authorFilters}
+          onSave={handleSaveFilters}
+          onClose={() => setShowFilterManager(false)}
+        />
+      )}
 
       {loading && pullRequests.length === 0 ? (
         <div className="loading">
@@ -140,9 +352,6 @@ export function PullRequestList() {
       )}
 
       <footer className="footer">
-        <p>
-          Excluded authors: <code>{config.excludedAuthors.join(', ')}</code>
-        </p>
         <p css={footerNoteStyle}>
           Click any row to open the PR in a new tab
         </p>
