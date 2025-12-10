@@ -39,6 +39,7 @@ export const EXCLUDED_AUTHORS = [
 5. Click **"Generate token"**
 6. **Copy the token immediately** (you can't see it again!)
 7. Paste into your `.env` file
+8. Ensure you configured SSO for the token you just created (authorize the Contrast org)
 
 ---
 

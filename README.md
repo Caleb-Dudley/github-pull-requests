@@ -124,7 +124,7 @@ The app automatically handles pagination to fetch all available results.
 
 Make sure you've:
 1. Created a `.env` file
-2. Added your GitHub Personal Access Token
+2. Added your GitHub Personal Access Token (and configured SSO for it)
 3. Added your GitHub username
 4. Restarted the dev server after creating/editing `.env`
 
@@ -143,6 +143,7 @@ Check that:
 2. Your username is spelled correctly in `.env`
 3. The PRs aren't from excluded authors
 4. The repositories aren't archived
+5. The token has SSO configured (authorize the Contrast org)
 
 ## License
 
