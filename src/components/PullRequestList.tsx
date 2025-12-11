@@ -39,7 +39,7 @@ const infoBarInnerStyle = css`
 
 const infoBarLeftStyle = css`
   display: flex;
-  gap: 1rem;
+  gap: 24px;
   align-items: center;
 `;
 
@@ -87,7 +87,7 @@ const sortButtonStyle = css`
 const sinceContainerStyle = css`
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 `;
 
 const dateInputStyle = {
@@ -113,7 +113,9 @@ export function PullRequestList() {
     sinceEnabled,
     setSinceEnabled,
     sinceDate,
-    setSinceDate
+    setSinceDate,
+    includeReviewedByMe,
+    setIncludeReviewedByMe
   } = useAppContext();
   const { pullRequests, loading, error, lastUpdated, refetch } = usePullRequests();
   const [showFilterManager, setShowFilterManager] = useState(false);
@@ -245,13 +247,30 @@ export function PullRequestList() {
     </div>
   );
 
+  const IncludeReviewedByMeFilter = (
+    <div>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', cursor: 'pointer' }}>
+        <input
+          type="checkbox"
+          checked={includeReviewedByMe}
+          onChange={(e) => {
+            setIncludeReviewedByMe?.(e.target.checked);
+            refetch();
+          }}
+          style={{ cursor: 'pointer' }}
+        />
+        Include PRs I've reviewed
+      </label>
+    </div>
+  );
+
   return (
     <div className="container">
       <header className="header">
         <div>
           <h1>GitHub Pull Requests</h1>
           <p className="subtitle">
-            Showing PRs awaiting review from <strong>{config.username}</strong>
+            Showing open PRs awaiting review or reviewed by <strong>{config.username}</strong>
           </p>
         </div>
         <div className="header-actions">
@@ -267,11 +286,9 @@ export function PullRequestList() {
             <div className="info-item">
               <strong>{pullRequests.length}</strong> pull request{pullRequests.length !== 1 ? 's' : ''}
             </div>
-            {lastUpdated && (
-              <div className="info-item">
-                Last updated: {lastUpdated.toLocaleTimeString()}
-              </div>
-            )}
+            <div className="info-item">
+              Last updated: {lastUpdated ? lastUpdated.toLocaleTimeString() : '--:--:-- --'}
+            </div>
             <div className="info-item">
               {`Auto-refresh:`} {RefreshTimeDropdown}
             </div>
@@ -281,6 +298,9 @@ export function PullRequestList() {
             </div>
             <div className="info-item">
               {SinceFilter}
+            </div>
+            <div className="info-item">
+              {IncludeReviewedByMeFilter}
             </div>
           </div>
           <div>

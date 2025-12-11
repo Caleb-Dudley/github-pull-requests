@@ -41,6 +41,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [sortDirection, setSortDirection] = useLocalStorage<'asc' | 'desc'>('sortDirection', 'desc');
   const [sinceEnabled, setSinceEnabled] = useLocalStorage<boolean>('sinceEnabled', false);
   const [sinceDate, setSinceDate] = useLocalStorage<string>('sinceDate', getDefaultSinceDate());
+  const [includeReviewedByMe, setIncludeReviewedByMe] = useLocalStorage<boolean>('includeReviewedByMe', false);
 
   const contextValue: AppContextProps = {
     refreshIntervalMins,
@@ -55,6 +56,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSinceEnabled,
     sinceDate,
     setSinceDate,
+    includeReviewedByMe,
+    setIncludeReviewedByMe
   };
 
   return (

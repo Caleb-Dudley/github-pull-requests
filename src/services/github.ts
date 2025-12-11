@@ -24,26 +24,27 @@ class GitHubService {
   /**
    * Build the search query with all filters
    */
-  private buildSearchQuery(authorFilters?: AuthorFilter[], sinceDate?: string, sinceEnabled?: boolean): string {
+  private buildSearchQuery(authorFilters?: AuthorFilter[], sinceDate?: string, sinceEnabled?: boolean, includeReviewedByMe?: boolean): string {
     // Use provided filters or fall back to default excluded authors
     const filters = authorFilters || EXCLUDED_AUTHORS.map(username => ({ username, mode: 'exclude' as const }));
-    
+
     const excludedAuthors = filters
       .filter(f => f.mode === 'exclude')
       .map(f => `-author:${f.username}`)
       .join(' ');
-    
+
     const includedAuthors = filters
       .filter(f => f.mode === 'include')
       .map(f => `author:${f.username}`)
       .join(' ');
-    
+
     const authorQuery = [excludedAuthors, includedAuthors].filter(Boolean).join(' ');
-    
+
     // Add since date if enabled and valid
     const sinceQuery = (sinceEnabled && sinceDate) ? `created:>=${sinceDate}` : '';
-    
-    return `is:open is:pr review-requested:${this.username} archived:false ${authorQuery} ${sinceQuery}`.trim();
+    const reviewQuery = includeReviewedByMe ? `(review-requested:${this.username} OR reviewed-by:${this.username})` : `review-requested:${this.username}`;
+
+    return `is:open is:pr ${reviewQuery} archived:false ${authorQuery} ${sinceQuery}`.trim();
   }
 
   /**
@@ -75,10 +76,11 @@ class GitHubService {
     sort: 'created' | 'updated' | 'comments' = 'created',
     direction: 'asc' | 'desc' = 'desc',
     sinceDate?: string,
-    sinceEnabled?: boolean
+    sinceEnabled?: boolean,
+    includeReviewedByMe?: boolean
   ): Promise<SearchResponse> {
-    const query = encodeURIComponent(this.buildSearchQuery(authorFilters, sinceDate, sinceEnabled));
-    const url = `${GITHUB_API_BASE_URL}/search/issues?q=${query}&sort=${sort}&order=${direction}&per_page=${PER_PAGE}&page=${page}`;
+    const query = encodeURIComponent(this.buildSearchQuery(authorFilters, sinceDate, sinceEnabled, includeReviewedByMe));
+    const url = `${GITHUB_API_BASE_URL}/search/issues?q=${query}&sort=${sort}&order=${direction}&per_page=${PER_PAGE}&page=${page}&advanced_search=true`;
     return this.fetchFromGitHub<SearchResponse>(url);
   }
 
@@ -111,14 +113,15 @@ class GitHubService {
     sort: 'created' | 'updated' | 'comments' = 'created',
     direction: 'asc' | 'desc' = 'desc',
     sinceDate?: string,
-    sinceEnabled?: boolean
+    sinceEnabled?: boolean,
+    includeReviewedByMe?: boolean
   ): Promise<PullRequestWithRepo[]> {
     const allPRs: PullRequestWithRepo[] = [];
     let page = 1;
     let hasMore = true;
 
     while (hasMore) {
-      const data = await this.fetchPage(page, authorFilters, sort, direction, sinceDate, sinceEnabled);
+      const data = await this.fetchPage(page, authorFilters, sort, direction, sinceDate, sinceEnabled, includeReviewedByMe);
       
       if (data.items.length === 0) {
         hasMore = false;
