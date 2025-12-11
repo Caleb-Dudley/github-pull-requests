@@ -17,6 +17,8 @@ export interface AppContextProps {
   setSinceEnabled?: (enabled: boolean) => void;
   sinceDate: string;
   setSinceDate?: (date: string) => void;
+  includeReviewedByMe: boolean;
+  setIncludeReviewedByMe?: (include: boolean) => void;
 }
 
 export const AppContext = React.createContext<AppContextProps>({ 
@@ -25,6 +27,7 @@ export const AppContext = React.createContext<AppContextProps>({
   sortBy: 'created',
   sortDirection: 'desc',
   sinceEnabled: false,
-  sinceDate: ''
+  sinceDate: '',
+  includeReviewedByMe: false
 });
 export const useAppContext = () => React.useContext(AppContext);
